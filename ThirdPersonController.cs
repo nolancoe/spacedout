@@ -407,48 +407,29 @@ public class ThirdPersonController : MonoBehaviour
 
     private void StartHanging()
     {
+        // Check if the player's rotation is within ±30 degrees of the ledge rotation
         var currentYRotation = transform.eulerAngles.y;
         var rotationDifference = Mathf.Abs(Mathf.DeltaAngle(currentYRotation, _targetLedgeRotationY));
+        Debug.Log($"Start Hanging - Current Rotation: {currentYRotation}, Target Rotation: {_targetLedgeRotationY}, Difference: {rotationDifference}");
+        
         if (rotationDifference > 30f)
         {
             Debug.Log("Player is not facing the ledge within ±30 degrees. Hang action canceled.");
             _jumpRequested = true;
-            return; 
+            return; // Cancel hanging if the angle difference exceeds 30 degrees
+            
         }
 
-        if (_ledgeHandPosition != null)
-        {
-            // Get the rotation of the ledge
-            Quaternion ledgeRotation = Quaternion.Euler(0, _targetLedgeRotationY, 0);
+        StartCoroutine(ClimbDelay());
+        _velocity = Vector3.zero; // Stop movement
+        _controller.enabled = false; // Disable CharacterController
+        _animator.SetTrigger(StartHang);
+        _isHanging = true;
+        Debug.Log($"Hanging Started. Adjusting to position {_ledgeHandPosition.position}, {_targetLedgeRotationY}");
 
-            // Create offset vector
-            Vector3 offset = new Vector3(_ledgeOffsetX, _ledgeOffsetY, _ledgeOffsetZ);
-
-            // Apply the ledge's rotation to the offset
-            Vector3 rotatedOffset = ledgeRotation * offset;
-
-            // Calculate new position considering rotation
-            Vector3 newPosition = _ledgeHandPosition.position + rotatedOffset;
-
-            // Keep the player's X position from world space
-            newPosition.x = transform.position.x;
-
-            // Set the player's position
-            transform.position = newPosition;
+        // Smoothly rotate towards the ledge when hanging starts
+        StartCoroutine(SmoothRotateToLedge(_targetLedgeRotationY)); // Use the stored rotation value
         
-            StartCoroutine(ClimbDelay());
-            _velocity = Vector3.zero;
-            _controller.enabled = false;
-            _animator.SetTrigger(StartHang);
-            _isHanging = true;
-            Debug.Log($"Hanging Started. Adjusting to position {newPosition}, {_targetLedgeRotationY}");
-
-            StartCoroutine(SmoothRotateToLedge(_targetLedgeRotationY));
-        }
-        else
-        {
-            Debug.LogError("No valid ledge hand position found for hanging.");
-        }
     }
 
     private void StopHanging()
