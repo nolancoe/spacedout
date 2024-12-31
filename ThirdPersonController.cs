@@ -239,11 +239,22 @@ public class ThirdPersonController : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
         // Adjust speed based on sprint
-        var currentSpeed = moveSpeed * (_isSprinting ? sprintSpeedMultiplier : 1f);
+        if (!_isCrouching)
+        {
+            var currentSpeed = moveSpeed * (_isSprinting ? sprintSpeedMultiplier : 1f);
 
-        var moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-        var deltaSpeed = currentSpeed * Time.deltaTime;
-        _controller.Move(moveDir.normalized * deltaSpeed);
+            var moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            var deltaSpeed = currentSpeed * Time.deltaTime;
+            _controller.Move(moveDir.normalized * deltaSpeed);
+        }
+        else
+        {
+            var currentSpeed = moveSpeed - 1f * (_isSprinting ? sprintSpeedMultiplier : 1f);
+
+            var moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            var deltaSpeed = currentSpeed * Time.deltaTime;
+            _controller.Move(moveDir.normalized * deltaSpeed);
+        }
     }
 
     private void HandleGravity()
