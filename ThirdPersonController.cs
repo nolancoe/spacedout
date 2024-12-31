@@ -13,6 +13,8 @@ public class ThirdPersonController : MonoBehaviour
     private static readonly int ToBlendTree = Animator.StringToHash("ToBlendTree");
     private static readonly int Jump = Animator.StringToHash("Jump");
     private static readonly int StartHang = Animator.StringToHash("StartHang");
+    private static readonly int Crouch = Animator.StringToHash("Crouch");
+    private static readonly int UnCrouch = Animator.StringToHash("UnCrouch");
 
     [Header("Movement Settings")]
     public float moveSpeed = 4f;
@@ -25,6 +27,8 @@ public class ThirdPersonController : MonoBehaviour
     private float _groundedTime;
     public float jumpDelay = 0.5f;
     private bool _isGrounded;
+    // Crouch Stuff
+    public bool _isCrouching;
 
     [Header("Ground Check")]
     public Transform groundCheck;
@@ -58,9 +62,7 @@ public class ThirdPersonController : MonoBehaviour
     // Controller stuff
     private CharacterController _controller;
     private Vector3 _velocity;
-    
     private bool _jumpRequested;
-
     private float _turnSmoothVelocity;
     
 
@@ -126,6 +128,7 @@ public class ThirdPersonController : MonoBehaviour
                 HandleMovement();
                 HandleGravity();
                 HandleJump();
+                HandleCrouch();
             }
         }
         
@@ -472,6 +475,12 @@ public class ThirdPersonController : MonoBehaviour
                 StartCoroutine(JumpToBlendTree());
             }
 
+            if (_isCrouching)
+            {
+                _animator.ResetTrigger(Crouch);
+                _isCrouching = false;
+            }
+
             _jumpRequested = false; // Reset jump request immediately
         }
     }
@@ -496,6 +505,32 @@ public class ThirdPersonController : MonoBehaviour
     {
         // Sprinting only happens when shift is pressed AND there's movement input
         _isSprinting = value.isPressed && (_moveInput.x != 0 || _moveInput.y != 0);
+    }
+    
+    
+    public void OnCrouch(InputValue value)
+    {
+        if (!value.isPressed) return;
+        if (!_isHanging && !_isClimbing && !_isCrouching && _isGrounded) // Check if the player is currently hanging
+        {
+            _isCrouching = true;
+            Debug.Log($"Crouch pressed");
+        }
+        else if (!_isHanging && !_isClimbing && _isCrouching && _isGrounded)
+        {
+            _isCrouching = false;
+            _animator.ResetTrigger(Crouch);
+            _animator.SetTrigger(UnCrouch);
+        }
+        
+    }
+    
+    private void HandleCrouch()
+    {
+        if (_isCrouching)
+        {
+            _animator.SetTrigger(Crouch);
+        }
     }
     
 }
