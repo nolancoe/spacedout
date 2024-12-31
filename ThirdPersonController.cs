@@ -128,7 +128,6 @@ public class ThirdPersonController : MonoBehaviour
                 HandleMovement();
                 HandleGravity();
                 HandleJump();
-                HandleCrouch();
             }
         }
         
@@ -515,6 +514,8 @@ public class ThirdPersonController : MonoBehaviour
         if (!_isHanging && !_isClimbing && !_isCrouching && _isGrounded) // Check if the player is currently hanging
         {
             _isCrouching = true;
+            _animator.SetTrigger(Crouch);
+            _isSprinting = false;
             _controller.height = 3f;
             _controller.center = new Vector3(
                 _controller.center.x,
@@ -530,14 +531,6 @@ public class ThirdPersonController : MonoBehaviour
         
     }
     
-    private void HandleCrouch()
-    {
-        if (_isCrouching)
-        {
-            _animator.SetTrigger(Crouch);
-            
-        }
-    }
 
     private void StopCrouch()
     {
