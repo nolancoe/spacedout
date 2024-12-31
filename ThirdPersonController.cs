@@ -477,8 +477,7 @@ public class ThirdPersonController : MonoBehaviour
 
             if (_isCrouching)
             {
-                _animator.ResetTrigger(Crouch);
-                _isCrouching = false;
+                StopCrouch();
             }
 
             _jumpRequested = false; // Reset jump request immediately
@@ -505,6 +504,8 @@ public class ThirdPersonController : MonoBehaviour
     {
         // Sprinting only happens when shift is pressed AND there's movement input
         _isSprinting = value.isPressed && (_moveInput.x != 0 || _moveInput.y != 0);
+        if (!_isCrouching) return;
+        StopCrouch();
     }
     
     
@@ -514,13 +515,17 @@ public class ThirdPersonController : MonoBehaviour
         if (!_isHanging && !_isClimbing && !_isCrouching && _isGrounded) // Check if the player is currently hanging
         {
             _isCrouching = true;
+            _controller.height = 3f;
+            _controller.center = new Vector3(
+                _controller.center.x,
+                1.5f,
+                _controller.center.z
+            );
             Debug.Log($"Crouch pressed");
         }
         else if (!_isHanging && !_isClimbing && _isCrouching && _isGrounded)
         {
-            _isCrouching = false;
-            _animator.ResetTrigger(Crouch);
-            _animator.SetTrigger(UnCrouch);
+            StopCrouch();
         }
         
     }
@@ -530,7 +535,26 @@ public class ThirdPersonController : MonoBehaviour
         if (_isCrouching)
         {
             _animator.SetTrigger(Crouch);
+            
         }
     }
+
+    private void StopCrouch()
+    {
+        _isCrouching = false;
+        _animator.ResetTrigger(Crouch);
+        if (!_jumpRequested)
+        {
+            _animator.SetTrigger(UnCrouch);
+        }
+        _controller.height = 4.9f;
+        _controller.center = new Vector3(
+            _controller.center.x,
+            2.52f,
+            _controller.center.z
+        );
+    }
+
+    
     
 }
