@@ -44,7 +44,7 @@ public class ThirdPersonController : MonoBehaviour
     private bool _canRehang = true;
     // Offsets for adjusting the player's position when hanging on a ledge
     private float _ledgeOffsetX, _ledgeOffsetY, _ledgeOffsetZ;
-    [SerializeField] private GameObject ledgeColliderObject;
+    [SerializeField] private GameObject ledgeFinderObject;
     
     
     [Header("Falling Settings")]
@@ -86,13 +86,13 @@ public class ThirdPersonController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked; // Lock cursor
         
         //Ledge Checker
-        LedgeCollisionChecker.OnLedgeCollision += HandleLedgeCollision;
+        LedgeCollisionChecker.onLedgeCollision += HandleLedgeCollision;
         
     }
 
     private void OnDestroy()
     {
-        LedgeCollisionChecker.OnLedgeCollision -= HandleLedgeCollision;
+        LedgeCollisionChecker.onLedgeCollision -= HandleLedgeCollision;
     }
 
     private void Update()
@@ -111,11 +111,7 @@ public class ThirdPersonController : MonoBehaviour
         if (_isHanging && _ledgeHandPosition != null)
         {
             // Apply the offset to the hand position when setting the player's position
-            var adjustedPosition = new Vector3(
-                transform.position.x, 
-                _ledgeHandPosition.position.y + _ledgeOffsetY, 
-                _ledgeHandPosition.position.z + _ledgeOffsetZ
-            );
+            var adjustedPosition = _ledgeHandPosition.position + new Vector3(_ledgeOffsetX, _ledgeOffsetY, _ledgeOffsetZ);
             transform.position = Vector3.Lerp(transform.position, adjustedPosition, hangTransitionSpeed * Time.deltaTime);
             //Method to handle climbing up from ledge
             HandleHangingInput();
@@ -315,9 +311,9 @@ public class ThirdPersonController : MonoBehaviour
         _controller.enabled = false; // Disable movement during climbing
         _moveInput = Vector2.zero;
             
-        if (ledgeColliderObject != null)
+        if (ledgeFinderObject != null)
         {
-            ledgeColliderObject.SetActive(false);
+            ledgeFinderObject.SetActive(false);
         }
         _isGrounded = false;
         _ledgeHandPosition = null;
@@ -376,9 +372,9 @@ public class ThirdPersonController : MonoBehaviour
 
         StopHanging();
     
-        if (ledgeColliderObject != null)
+        if (ledgeFinderObject != null)
         {
-            ledgeColliderObject.SetActive(true);
+            ledgeFinderObject.SetActive(true);
         }
         _isGrounded = true;
     }
