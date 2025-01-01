@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem; // Required for the New Input System
 
@@ -23,6 +24,7 @@ public class ThirdPersonController : MonoBehaviour
     public float gravity = -20f;
     public float turnSmoothTime = 0.1f;
     private Transform _cam;
+    public CinemachineCamera _cinemachine;
     // Grounded delay variables
     private float _groundedTime;
     public float jumpDelay = 0.5f;
@@ -55,8 +57,9 @@ public class ThirdPersonController : MonoBehaviour
     private bool _wasGrounded; // To track grounded state from the previous frame
     private bool _isFalling; // To track if the player is currently falling
     
-    
-    
+    [Header("Fighting Settings")]
+    public bool _isFighting;
+    private FightCam _fightCam;
     
 
     // Controller stuff
@@ -72,18 +75,19 @@ public class ThirdPersonController : MonoBehaviour
     private bool _isSprinting; // Tracks sprint input
     
     // Animation
-    private Animator _animator;
+    public Animator _animator;
 
 
     private void Start()
     {
         _controller = GetComponent<CharacterController>();
+        _fightCam = _cinemachine.GetComponentInChildren<FightCam>();
+        _fightCam.enabled = false;
         if (Camera.main != null)
         {
             _cam = Camera.main.transform;
         }
-
-        _animator = GetComponent<Animator>();
+        
 
         Cursor.lockState = CursorLockMode.Locked; // Lock cursor
         
@@ -143,7 +147,14 @@ public class ThirdPersonController : MonoBehaviour
             _isSprinting = false;
         }
         
-        
+        if (_isFighting)
+        {
+            FightingCamera();
+        }
+        else
+        {
+            _fightCam.enabled = false;
+        }
         
         // Set Animator Parameters for the Blend Tree
         var speedValue = _isSprinting ? 2f : Mathf.Clamp01(Mathf.Abs(vertical));
@@ -151,6 +162,13 @@ public class ThirdPersonController : MonoBehaviour
         _animator.SetFloat(Horizontal, horizontal); // For strafing or turning
     }
     
+    private void FightingCamera()
+    {
+        _cinemachine.Priority = 9;
+        _fightCam.enabled = true;
+        // Ensure player's Y rotation matches the camera's Y rotation
+        transform.rotation = Quaternion.Euler(0f, _cam.eulerAngles.y, 0f);
+    }
     
     private void HandleGroundCheck()
     {
@@ -233,8 +251,20 @@ public class ThirdPersonController : MonoBehaviour
         var direction = new Vector3(_moveInput.x, 0f, _moveInput.y).normalized;
 
         if (!(direction.magnitude >= 0.1f)) return;
-        var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
-        var angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turnSmoothTime);
+        float angle;
+        if (_isFighting)
+        {
+            // In fight mode, the player's rotation should match the camera's yaw
+            angle = _cam.eulerAngles.y;
+        }
+        else
+        {
+            _cinemachine.Priority = 11;
+            _fightCam.enabled = false;
+            var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
+            angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity,
+                turnSmoothTime);
+        }
 
         transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
@@ -242,7 +272,7 @@ public class ThirdPersonController : MonoBehaviour
         if (!_isCrouching)
         {
             var currentSpeed = moveSpeed * (_isSprinting ? sprintSpeedMultiplier : 1f);
-
+            var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
             var moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             var deltaSpeed = currentSpeed * Time.deltaTime;
             _controller.Move(moveDir.normalized * deltaSpeed);
@@ -250,7 +280,7 @@ public class ThirdPersonController : MonoBehaviour
         else
         {
             var currentSpeed = moveSpeed - 1f * (_isSprinting ? sprintSpeedMultiplier : 1f);
-
+            var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
             var moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             var deltaSpeed = currentSpeed * Time.deltaTime;
             _controller.Move(moveDir.normalized * deltaSpeed);
@@ -557,6 +587,22 @@ public class ThirdPersonController : MonoBehaviour
             2.52f,
             _controller.center.z
         );
+    }
+    
+    
+    public void OnFight(InputValue value)
+    {
+        _isFighting = value.isPressed;
+    
+        if (_isFighting)
+        {
+            EnterFightMode();
+        }
+    }
+
+    private void EnterFightMode()
+    {
+        Debug.Log($"Fighting started");
     }
 
     
