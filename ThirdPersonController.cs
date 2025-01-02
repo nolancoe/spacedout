@@ -16,6 +16,7 @@ public class ThirdPersonController : MonoBehaviour
     private static readonly int StartHang = Animator.StringToHash("StartHang");
     private static readonly int Crouch = Animator.StringToHash("Crouch");
     private static readonly int UnCrouch = Animator.StringToHash("UnCrouch");
+    private static readonly int Fighting = Animator.StringToHash("Fighting");
 
     [Header("Movement Settings")]
     public float moveSpeed = 4f;
@@ -60,7 +61,7 @@ public class ThirdPersonController : MonoBehaviour
     [Header("Fighting Settings")]
     public bool _isFighting;
     private FightCam _fightCam;
-    
+    private float _angle;
 
     // Controller stuff
     private CharacterController _controller;
@@ -154,6 +155,8 @@ public class ThirdPersonController : MonoBehaviour
         else
         {
             _fightCam.enabled = false;
+            _cinemachine.Priority = 11;
+            
         }
         
         // Set Animator Parameters for the Blend Tree
@@ -251,22 +254,21 @@ public class ThirdPersonController : MonoBehaviour
         var direction = new Vector3(_moveInput.x, 0f, _moveInput.y).normalized;
 
         if (!(direction.magnitude >= 0.1f)) return;
-        float angle;
+        
         if (_isFighting)
         {
             // In fight mode, the player's rotation should match the camera's yaw
-            angle = _cam.eulerAngles.y;
+            _angle = _cam.eulerAngles.y;
         }
         else
         {
-            _cinemachine.Priority = 11;
-            _fightCam.enabled = false;
+            
             var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
-            angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity,
+            _angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity,
                 turnSmoothTime);
         }
 
-        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        transform.rotation = Quaternion.Euler(0f, _angle, 0f);
 
         // Adjust speed based on sprint
         if (!_isCrouching)
@@ -598,11 +600,23 @@ public class ThirdPersonController : MonoBehaviour
         {
             EnterFightMode();
         }
+        else
+        {
+            ExitFightMode();
+        }
     }
 
     private void EnterFightMode()
     {
+        _animator.SetTrigger(Fighting);
         Debug.Log($"Fighting started");
+    }
+    
+    private void ExitFightMode()
+    {
+        _isFighting = false;
+        _animator.SetTrigger(ToBlendTree);
+        Debug.Log($"Fighting Stopped");
     }
 
     
