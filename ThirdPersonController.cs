@@ -223,7 +223,10 @@ public class ThirdPersonController : MonoBehaviour
             // Player starts falling
             case false when !_isFalling && _velocity.y < -10f:
                 _isFalling = true;
-
+                if (_isCrouching)
+                {
+                    StopCrouch();
+                }
                 _animator.SetTrigger(Falling);
                 break;
         }
@@ -558,7 +561,7 @@ public class ThirdPersonController : MonoBehaviour
     public void OnCrouch(InputValue value)
     {
         if (!value.isPressed) return;
-        if (!_isHanging && !_isClimbing && !_isCrouching && !_isFighting && _isGrounded) // Check if the player is currently hanging
+        if (!_isHanging && !_isClimbing && !_isCrouching && !_isFighting && _isGrounded && !_isSprinting) // Check if the player is currently hanging
         {
             _isCrouching = true;
             _animator.SetTrigger(Crouch);
@@ -571,7 +574,7 @@ public class ThirdPersonController : MonoBehaviour
             );
             Debug.Log($"Crouch pressed");
         }
-        else if (!_isHanging && !_isClimbing && _isCrouching && _isGrounded)
+        else if (!_isHanging && !_isClimbing && _isCrouching && _isGrounded && !_isSprinting)
         {
             StopCrouch();
         }
