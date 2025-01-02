@@ -150,7 +150,9 @@ public class ThirdPersonController : MonoBehaviour
         
         if (_isFighting)
         {
+            if (_isHanging || _isClimbing || !_isGrounded) return;
             FightingCamera();
+            
         }
         else
         {
@@ -271,7 +273,7 @@ public class ThirdPersonController : MonoBehaviour
         transform.rotation = Quaternion.Euler(0f, _angle, 0f);
 
         // Adjust speed based on sprint
-        if (!_isCrouching)
+        if (!_isCrouching && !_isFighting)
         {
             var currentSpeed = moveSpeed * (_isSprinting ? sprintSpeedMultiplier : 1f);
             var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
@@ -281,7 +283,7 @@ public class ThirdPersonController : MonoBehaviour
         }
         else
         {
-            var currentSpeed = moveSpeed - 1f * (_isSprinting ? sprintSpeedMultiplier : 1f);
+            var currentSpeed = moveSpeed - 1.5f * (_isSprinting ? sprintSpeedMultiplier : 1f);
             var targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + _cam.eulerAngles.y;
             var moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             var deltaSpeed = currentSpeed * Time.deltaTime;
@@ -428,6 +430,7 @@ public class ThirdPersonController : MonoBehaviour
     public void OnJump(InputValue value)
     {
         if (!value.isPressed) return;
+        if (_isFighting) return;
         if (_isHanging && !_isClimbing) // Check if the player is currently hanging
         {
             // Make the player jump off the ledge
@@ -544,6 +547,7 @@ public class ThirdPersonController : MonoBehaviour
     
     public void OnSprint(InputValue value)
     {
+        if (_isFighting) return;
         // Sprinting only happens when shift is pressed AND there's movement input
         _isSprinting = value.isPressed && (_moveInput.x != 0 || _moveInput.y != 0);
         if (!_isCrouching) return;
@@ -554,7 +558,7 @@ public class ThirdPersonController : MonoBehaviour
     public void OnCrouch(InputValue value)
     {
         if (!value.isPressed) return;
-        if (!_isHanging && !_isClimbing && !_isCrouching && _isGrounded) // Check if the player is currently hanging
+        if (!_isHanging && !_isClimbing && !_isCrouching && !_isFighting && _isGrounded) // Check if the player is currently hanging
         {
             _isCrouching = true;
             _animator.SetTrigger(Crouch);
@@ -594,20 +598,39 @@ public class ThirdPersonController : MonoBehaviour
     
     public void OnFight(InputValue value)
     {
-        _isFighting = value.isPressed;
-    
-        if (_isFighting)
+        // Check if the button is being pressed or released
+        bool fightButtonPressed = value.isPressed;
+
+        // Ignore fight input if sprinting
+        if (_isSprinting)
         {
-            EnterFightMode();
+            // Reset `_isFighting` if the fight button is released while sprinting
+            if (!fightButtonPressed)
+            {
+                _isFighting = false;
+            }
+            return;
         }
-        else
+
+        // Handle fight mode transitions only when grounded and not sprinting
+        if (_isGrounded)
         {
-            ExitFightMode();
+            if (fightButtonPressed && !_isFighting)
+            {
+                _isFighting = true;
+                EnterFightMode();
+            }
+            else if (!fightButtonPressed && _isFighting)
+            {
+                _isFighting = false;
+                ExitFightMode();
+            }
         }
     }
 
     private void EnterFightMode()
     {
+        if (_isCrouching || _isHanging || _isClimbing || !_isGrounded || _isSprinting) return;
         _animator.SetTrigger(Fighting);
         Debug.Log($"Fighting started");
     }
@@ -615,6 +638,7 @@ public class ThirdPersonController : MonoBehaviour
     private void ExitFightMode()
     {
         _isFighting = false;
+        if (_isCrouching || _isHanging || _isClimbing || !_isGrounded || _isSprinting) return;
         _animator.SetTrigger(ToBlendTree);
         Debug.Log($"Fighting Stopped");
     }
