@@ -5,13 +5,14 @@ public class Fighting : MonoBehaviour
 {
     //Avoiding strings when setting animator triggers
     private static readonly int LeftJab = Animator.StringToHash("LeftJab");
+    private static readonly int RightJab = Animator.StringToHash("RightJab");
 
     ///Object references
     private ThirdPersonController _thirdPersonController;
-    public Animator _animator;
+    private Animator _animator;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Start()
     {
         _thirdPersonController = GetComponent<ThirdPersonController>();
         if (_thirdPersonController == null)
@@ -22,9 +23,9 @@ public class Fighting : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (_thirdPersonController == null || !_thirdPersonController._isFighting) return;
+        if (!_thirdPersonController || !_thirdPersonController._isFighting) return;
         
     }
 
@@ -34,6 +35,16 @@ public class Fighting : MonoBehaviour
         if (value.isPressed)
         {
             _animator.SetTrigger(LeftJab);
+        }
+        
+    }
+    
+    public void OnRightJab(InputValue value)
+    {
+        if (!_thirdPersonController._isFighting) return;
+        if (value.isPressed)
+        {
+            _animator.SetTrigger(RightJab);
         }
         
     }

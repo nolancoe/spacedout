@@ -223,11 +223,11 @@ public class ThirdPersonController : MonoBehaviour
             // Player starts falling
             case false when !_isFalling && _velocity.y < -10f:
                 _isFalling = true;
+                _animator.SetTrigger(Falling);
                 if (_isCrouching)
                 {
                     StopCrouch();
                 }
-                _animator.SetTrigger(Falling);
                 break;
         }
 
