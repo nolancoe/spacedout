@@ -31,7 +31,7 @@ public class Fighting : MonoBehaviour
 
     public void OnLeftJab(InputValue value)
     {
-        if (!_thirdPersonController._isFighting) return;
+        if (!_thirdPersonController._isFighting || _thirdPersonController._isCrouching) return;
         if (value.isPressed)
         {
             _animator.SetTrigger(LeftJab);
@@ -41,7 +41,7 @@ public class Fighting : MonoBehaviour
     
     public void OnRightJab(InputValue value)
     {
-        if (!_thirdPersonController._isFighting) return;
+        if (!_thirdPersonController._isFighting || _thirdPersonController._isCrouching) return;
         if (value.isPressed)
         {
             _animator.SetTrigger(RightJab);

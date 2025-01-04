@@ -442,7 +442,7 @@ public class ThirdPersonController : MonoBehaviour
             _velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
             StartCoroutine(JumpToBlendTree());// Add jump force
         }
-        else if (_ledgeHandPosition != null && _canRehang && !_isClimbing) // Check if re-hanging is allowed
+        else if (_ledgeHandPosition != null && _canRehang && !_isClimbing && !_isCrouching) // Check if re-hanging is allowed
         {
             StartHanging();
         }
