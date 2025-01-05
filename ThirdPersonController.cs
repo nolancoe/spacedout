@@ -635,7 +635,7 @@ public class ThirdPersonController : MonoBehaviour
     {
         if (_isCrouching || _isHanging || _isClimbing || !_isGrounded || _isSprinting) return;
         _animator.SetTrigger(Fighting);
-        Debug.Log($"Fighting started");
+
     }
     
     private void ExitFightMode()
@@ -643,7 +643,7 @@ public class ThirdPersonController : MonoBehaviour
         _isFighting = false;
         if (_isCrouching || _isHanging || _isClimbing || !_isGrounded || _isSprinting) return;
         _animator.SetTrigger(ToBlendTree);
-        Debug.Log($"Fighting Stopped");
+
     }
 
     

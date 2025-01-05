@@ -10,6 +10,8 @@ public class Fighting : MonoBehaviour
     ///Object references
     private ThirdPersonController _thirdPersonController;
     private Animator _animator;
+    [SerializeField] private CapsuleCollider leftHandCollider;
+    [SerializeField] private CapsuleCollider rightHandCollider;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
