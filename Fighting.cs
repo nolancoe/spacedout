@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,6 +13,7 @@ public class Fighting : MonoBehaviour
     private Animator _animator;
     [SerializeField] private CapsuleCollider leftHandCollider;
     [SerializeField] private CapsuleCollider rightHandCollider;
+    public bool isPunching;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
@@ -37,6 +39,8 @@ public class Fighting : MonoBehaviour
         if (value.isPressed)
         {
             _animator.SetTrigger(LeftJab);
+            isPunching = true;
+            StartCoroutine(IsPunchingReset());
         }
         
     }
@@ -47,7 +51,15 @@ public class Fighting : MonoBehaviour
         if (value.isPressed)
         {
             _animator.SetTrigger(RightJab);
+            isPunching = true;
+            StartCoroutine(IsPunchingReset());
         }
         
+    }
+
+    private IEnumerator IsPunchingReset()
+    {
+        yield return new WaitForSeconds(0.5f);
+        isPunching = false;
     }
 }
